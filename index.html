@@ -154,7 +154,10 @@ math[display="block"]{margin:8px 0}
 .doc-pane{display:none}
 .doc-pane.active{display:block}
 .side nav.pagetoc{display:none}
-.side .doc-link.cur + nav.pagetoc{display:block}
+.side .doc-link.cur.toc-open + nav.pagetoc{display:block}
+.side .doc-link.cur{display:flex;align-items:center;justify-content:space-between;gap:6px}
+.side .doc-link.cur::after{content:'▸';font-size:11px;opacity:.65;flex-shrink:0}
+.side .doc-link.cur.toc-open::after{content:'▾'}
 </style>
 </head><body>
 <button class="menu" onclick="document.body.classList.toggle('nav-open')">☰ 目录</button>
@@ -19306,7 +19309,7 @@ int main() {
     };
   }
   function activeTocLinks(){
-    var cur=document.querySelector('.side .doc-link.cur');
+    var cur=document.querySelector('.side .doc-link.cur.toc-open');
     if(!cur||!cur.nextElementSibling||!cur.nextElementSibling.classList.contains('pagetoc'))return [];
     return [].slice.call(cur.nextElementSibling.querySelectorAll('a'));
   }
@@ -19338,6 +19341,7 @@ int main() {
     docLinks.forEach(function(a){
       var on=a.getAttribute('data-doc')===slug;
       a.classList.toggle('cur',on);
+      a.classList.toggle('toc-open',on);
       if(on&&side){side.scrollTop=Math.max(0,a.offsetTop-120);}
     });
     var activePane=document.getElementById('pane-'+slug);
@@ -19362,6 +19366,11 @@ int main() {
     var href=a.getAttribute('href');
     if(href.length>1){
       e.preventDefault();
+      if(a.classList.contains('doc-link')&&a.classList.contains('cur')){
+        a.classList.toggle('toc-open');
+        spy();
+        return;
+      }
       if(location.hash!==href)history.pushState(null,'',href);
       show(href);
     }

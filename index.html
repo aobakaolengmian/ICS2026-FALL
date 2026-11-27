@@ -20590,6 +20590,26 @@ unsigned float_greater(unsigned x, unsigned y) {
   }
   addEventListener('scroll',spy,{passive:true});
 
+  var pendingTrack=null,trackTimer=null;
+  function flushTrack(){
+    if(pendingTrack&&window.goatcounter&&window.goatcounter.count){
+      window.goatcounter.count({path:location.pathname+'#'+pendingTrack[0],title:pendingTrack[1]});
+      pendingTrack=null;
+    }
+  }
+  function track(slug,title){
+    if(location.protocol==='file:')return;
+    pendingTrack=[slug,title];
+    if(window.goatcounter&&window.goatcounter.count){flushTrack();return;}
+    if(!trackTimer){
+      var tries=0;
+      trackTimer=setInterval(function(){
+        tries++;
+        if(window.goatcounter&&window.goatcounter.count){clearInterval(trackTimer);trackTimer=null;flushTrack();}
+        else if(tries>40){clearInterval(trackTimer);trackTimer=null;}
+      },250);
+    }
+  }
   var currentSlug=null;
   function show(hash,fromSide){
     var raw=(hash||'#home').replace(/^#/,'');
@@ -20616,6 +20636,7 @@ unsigned float_greater(unsigned x, unsigned y) {
     var activePane=document.getElementById('pane-'+slug);
     var titleEl=activePane?activePane.getAttribute('data-title'):'';
     document.title=titleEl||'ICS 复习讲义';
+    if(switched)track(slug,document.title);
     document.body.classList.remove('nav-open');
     if(sec){
       var secLink=document.querySelector('.side .pagetoc a[data-sec="'+sec+'"]');
@@ -20697,4 +20718,5 @@ unsigned float_greater(unsigned x, unsigned y) {
   show(location.hash||'#home');
 })();
 </script>
+<script data-goatcounter="https://aobakaoyangtui.goatcounter.com/count" data-goatcounter-settings='{"no_onload":true}' async src="https://gc.zgo.at/count.js"></script>
 </body></html>

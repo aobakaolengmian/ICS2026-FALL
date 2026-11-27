@@ -19343,7 +19343,8 @@ int main() {
   }
   addEventListener('scroll',spy,{passive:true});
 
-  function show(hash){
+  var currentSlug=null;
+  function show(hash,fromSide){
     var raw=(hash||'#home').replace(/^#/,'');
     if(!raw)raw='home';
     var parts=raw.split('/');
@@ -19354,13 +19355,17 @@ int main() {
       if(m&&document.getElementById('pane-'+m[1])){slug=m[1];sec=slug+'-'+m[2];}
       else{slug='home';sec=null;}
     }
-    panes.forEach(function(p){p.classList.toggle('active',p.id==='pane-'+slug);});
-    docLinks.forEach(function(a){
-      var on=a.getAttribute('data-doc')===slug;
-      a.classList.toggle('cur',on);
-      a.classList.toggle('toc-open',on);
-      if(on&&side){side.scrollTop=Math.max(0,a.offsetTop-120);}
-    });
+    var switched=slug!==currentSlug;
+    currentSlug=slug;
+    if(switched){
+      panes.forEach(function(p){p.classList.toggle('active',p.id==='pane-'+slug);});
+      docLinks.forEach(function(a){
+        var on=a.getAttribute('data-doc')===slug;
+        a.classList.toggle('cur',on);
+        a.classList.toggle('toc-open',on);
+        if(on&&side&&!sec){side.scrollTop=Math.max(0,a.offsetTop-120);}
+      });
+    }
     var activePane=document.getElementById('pane-'+slug);
     var titleEl=activePane?activePane.getAttribute('data-title'):'';
     document.title=titleEl||'ICS 复习讲义';
@@ -19368,8 +19373,13 @@ int main() {
     if(sec){
       var secLink=document.querySelector('.side .pagetoc a[data-sec="'+sec+'"]');
       if(secLink){
+        if(!fromSide){
+          var curDoc=document.querySelector('.side .doc-link.cur');
+          if(curDoc)curDoc.classList.add('toc-open');
+        }
         var p=secLink.closest('.toc-node');
         while(p){p.classList.add('open');p=p.parentElement?p.parentElement.closest('.toc-node'):null;}
+        if(!fromSide){secLink.scrollIntoView({block:'nearest'});}
       }
       var target=document.getElementById(sec);
       if(target){
@@ -19399,8 +19409,9 @@ int main() {
         spy();
         return;
       }
+      var fromSide=!!(side&&side.contains(a)&&!a.closest('.hits'));
       if(location.hash!==href)history.pushState(null,'',href);
-      show(href);
+      show(href,fromSide);
     }
   });
   addEventListener('hashchange',function(){show(location.hash);});

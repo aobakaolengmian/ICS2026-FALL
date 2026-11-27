@@ -15814,13 +15814,13 @@ CFLAGS = -Wall -g -Werror
 tsh: tsh.c fork.c
 	$(CC) $(CFLAGS)   -Wl,--wrap,fork -o tsh tsh.c fork.c $(LIBS)</code></pre></figure>
 <p>第一，<code>-Werror</code> 把所有警告当成错误。调试时声明了一个变量却没有用到，或者调用了一个没有声明的函数，编译就会失败。第二，参与链接的只有 tsh.c 和 fork.c，csapp.c 不在其中，所以教材里常见的 Fork、Kill、Sigprocmask 等首字母大写的包装函数在 tsh.c 里都不能直接调用。在默认环境上用同样的选项编译两个小程序，可以看到这两种失败：</p>
-<figure class="code"><div class="code-title"><span style="color:#7F7F7F"><strong>sim/e5_build/unused.c</strong></span></div><pre><code>/* unused.c：-Wall -Werror 下，声明了却没用的变量会让编译失败 */
+<figure class="code"><div class="code-title"><span style="color:#7F7F7F"><strong>unused.c</strong></span></div><pre><code>/* unused.c：-Wall -Werror 下，声明了却没用的变量会让编译失败 */
 int main(void)
 {
     int bg;
     return 0;
 }</code></pre></figure>
-<figure class="code"><div class="code-title"><span style="color:#7F7F7F"><strong>sim/e5_build/fork_call.c</strong></span></div><pre><code>/* fork_call.c：在 tsh.c 里直接调用 csapp.c 的包装函数 Fork 会怎样
+<figure class="code"><div class="code-title"><span style="color:#7F7F7F"><strong>fork_call.c</strong></span></div><pre><code>/* fork_call.c：在 tsh.c 里直接调用 csapp.c 的包装函数 Fork 会怎样
  * （tsh 只由 tsh.c 和 fork.c 链接而成） */
 #include &lt;unistd.h&gt;
 int main(void)
@@ -15890,7 +15890,7 @@ cc1: all warnings being treated as errors</code></pre></figure>
 <p>MAXARGS 是一行命令最多的参数个数，struct cmdline_tokens 中 <code>argv[MAXARGS]</code> 的大小。parseline 在 argc 达到 MAXARGS − 1 时停止，留一个位置放结尾的 NULL，因为 execve 要求 argv 以 NULL 结束。</p>
 <p>MAXJOBS 是同时存在的作业数上限，作业列表 <code>job_list[MAXJOBS]</code> 只有 16 个槽位。第 17 个作业加入时 addjob 会打印“Tried to create too many jobs”并返回 0（第 1.11 节的实验）。</p>
 <p>MAXJID 是作业号的上限，但整个 tsh.c 中没有任何地方用到它；addjob 实际是在作业号超过 MAXJOBS 时从 1 重新开始的。这个宏还有一个 C 语言中的典型问题：替换内容 <code>1&lt;&lt;16</code> 没有加括号，放进表达式后会和周围的运算符重新结合。下面的程序照抄这一行，再与加了括号的写法对比：</p>
-<figure class="code"><div class="code-title"><span style="color:#7F7F7F"><strong>sim/e5_build/maxjid.c</strong></span></div><pre><code>/* maxjid.c：没有加括号的宏 MAXJID 在表达式里会出什么问题 */
+<figure class="code"><div class="code-title"><span style="color:#7F7F7F"><strong>maxjid.c</strong></span></div><pre><code>/* maxjid.c：没有加括号的宏 MAXJID 在表达式里会出什么问题 */
 #include &lt;stdio.h&gt;
 #define MAXJID    1&lt;&lt;16   /* 照抄 tsh.c 第 23 行 */
 #define MAXJID2 (1&lt;&lt;16)   /* 加了括号的写法 */
@@ -15945,7 +15945,7 @@ int nextjid = 1;            /* next job ID to allocate */
 char sbuf[MAXLINE];         /* for composing sprintf messages */</code></pre></figure>
 <p>全局变量定义在所有函数之外，整个程序运行期间只有一份，main、eval、parseline、处理程序和作业列表函数都可以直接读写。这一点对处理程序尤其重要：信号处理程序的参数只有一个信号编号，它要知道“前台作业是哪个”，只能通过全局的作业列表。</p>
 <p>第一个是 environ。<code>extern</code> 表示“这个变量在别处定义，这里只是声明”，environ 定义在 C 库中，指向当前进程的环境变量表：一个以 NULL 结尾的字符串数组，每一项形如 <code>"PATH=/usr/bin:..."</code>。它的唯一用处是作为 execve 的第三个参数，让子进程继承 tsh 的环境变量。这一点在 trace02 之后变得至关重要：runtrace 启动 tsh 之前设置了环境变量 SYNCFD，myspin1 等测试程序靠它找到与驱动程序同步的套接字；如果 execve 传入的是空环境，测试程序就收不到同步信号，trace 中的 WAIT 会一直等到超时。下面的程序对比两种传法：</p>
-<figure class="code"><div class="code-title"><span style="color:#7F7F7F"><strong>sim/e6_environ/envexec.c</strong></span></div><pre><code>/* envexec.c：execve 的第三个参数决定新程序看到哪些环境变量 */
+<figure class="code"><div class="code-title"><span style="color:#7F7F7F"><strong>envexec.c</strong></span></div><pre><code>/* envexec.c：execve 的第三个参数决定新程序看到哪些环境变量 */
 #include &lt;stdio.h&gt;
 #include &lt;stdlib.h&gt;
 #include &lt;unistd.h&gt;
@@ -16165,7 +16165,7 @@ eval(char *cmdline)
 <p>strcmp 在两个字符串相等时返回 0，所以 <code>!strcmp(a, b)</code> 读作“a 等于 b”。最后一个参数的<strong>第一个字符</strong>是 <code>&amp;</code> 时，作业在后台运行：把这个参数从 argv 中去掉（argc 减 1，原位置放 NULL），返回 1。</p>
 <h4 id="lab-shelllab-s18">实测：各种命令行的解析结果<a class="anchor" href="#lab-shelllab-s18">#</a></h4>
 <p>下面的程序把 handout 的 tsh.c 整个包含进来（用 <code>#define main tsh_main</code> 给它的 main 改名），直接调用 parseline，打印结果：</p>
-<figure class="code"><div class="code-title"><span style="color:#7F7F7F"><strong>sim/e1_parse/parse.c（节选）</strong></span></div><pre><code>#define main tsh_main            /* 改掉 tsh.c 里 main 的名字，避免和下面的 main 冲突 */
+<figure class="code"><div class="code-title"><span style="color:#7F7F7F"><strong>parse.c（节选）</strong></span></div><pre><code>#define main tsh_main            /* 改掉 tsh.c 里 main 的名字，避免和下面的 main 冲突 */
 #include "tsh.c"
 #undef main
 
@@ -16199,7 +16199,7 @@ Error: unmatched '.
 <p>从这些结果可以读出写 eval 时要注意的几件事。第一，返回值 1 并不总是“后台作业”：空行也返回 1，而且此时 builtins 根本没有被赋值，结构体里是什么就还是什么，所以骨架先检查 <code>tok.argv[0] == NULL</code>，必须放在使用 builtins 之前。第二，<code>&amp;</code> 必须是单独的一个词（准确地说，是最后一个词以 <code>&amp;</code> 开头）；<code>./myspin1 10&amp;</code> 被当作前台作业，参数是 "10&amp;"，这与 tshref 的行为一致。第三，重定向的文件名不在 argv 中，argv 可以直接交给 execve，打开文件要用 infile、outfile。第四，bg、fg、kill 的参数仍是字符串，"%2" 和 "12345" 要自己判断是作业号还是进程号并转换成整数；"%-1" 这样的负数参数也原样保留。第五，nohup 的 argv[0] 是 "nohup"，真正要运行的程序是 argv[1]，它的参数数组是 <code>&amp;tok.argv[1]</code>。第六，内置命令必须整词匹配，"quitx" 不是 quit。</p>
 <h4 id="lab-shelllab-s19">argv 中的字符串会被下一次调用覆盖<a class="anchor" href="#lab-shelllab-s19">#</a></h4>
 <p>注释中的 Note 一句很重要：argv、infile、outfile 中的字符串都存放在 parseline 的静态数组 array 中，下一次调用 parseline 时会被覆盖。</p>
-<figure class="code"><div class="code-title"><span style="color:#7F7F7F"><strong>sim/e1_parse/keep.c</strong></span></div><pre><code>/* keep.c：parseline 返回的字符串都指向它内部的静态数组，下一次调用会把它们覆盖 */
+<figure class="code"><div class="code-title"><span style="color:#7F7F7F"><strong>keep.c</strong></span></div><pre><code>/* keep.c：parseline 返回的字符串都指向它内部的静态数组，下一次调用会把它们覆盖 */
 #define main tsh_main
 #include "tsh.c"
 #undef main
@@ -16383,7 +16383,7 @@ listjobs(struct job_t *job_list, int output_fd)
 <p>listjobs 就是内置命令 jobs 的全部工作：按数组下标的顺序，把每个非空槽位写成一行“[jid] (pid) 状态 命令行”。它的第二个参数是一个文件描述符，而不是 FILE 指针：一般情况下传 STDOUT_FILENO（即 1）；<code>jobs &gt; foo</code> 时，先用 open 打开 foo 得到一个描述符，把它传给 listjobs，用完再 close。listjobs 用 write 直接写描述符，不经过 stdio 的缓冲区，所以不需要 fflush。</p>
 <h4 id="lab-shelllab-s21">实测：jid 的分配、查找与 listjobs 的输出<a class="anchor" href="#lab-shelllab-s21">#</a></h4>
 <p>下面的程序同样包含 handout 的 tsh.c，依次加入、修改、删除作业，每一步打印作业列表的内容。</p>
-<figure class="code"><div class="code-title"><span style="color:#7F7F7F"><strong>sim/e2_jobs/jobs.c（节选）</strong></span></div><pre><code>    initjobs(job_list);
+<figure class="code"><div class="code-title"><span style="color:#7F7F7F"><strong>jobs.c（节选）</strong></span></div><pre><code>    initjobs(job_list);
     addjob(job_list, 1001, BG, "./myspin1 100 &amp;");
     addjob(job_list, 1002, BG, "./myspin2 100 &amp;");
     addjob(job_list, 1003, FG, "./myspin1 5");
@@ -16522,7 +16522,7 @@ void sio_error(char s[]) /* Put error message and exit */
 }</code></pre></figure>
 <p>sio_put 的参数表中的 <code>...</code> 表示可变参数，用 stdarg.h 中的 va_list、va_start、va_arg、va_end 逐个取出。它先把整行拼接在局部数组 str 中，最后只调用一次 write，所以一行输出不会被别的输出从中间打断。</p>
 <h4 id="lab-shelllab-s24">实测：sio 系列能做什么、不能做什么<a class="anchor" href="#lab-shelllab-s24">#</a></h4>
-<figure class="code"><div class="code-title"><span style="color:#7F7F7F"><strong>sim/e3_sio/sio.c（节选）</strong></span></div><pre><code>    n = sio_puts("sio_puts: hello\n");
+<figure class="code"><div class="code-title"><span style="color:#7F7F7F"><strong>sio.c（节选）</strong></span></div><pre><code>    n = sio_puts("sio_puts: hello\n");
     sio_put("  （返回值 %d）\n", (int)n);
     sio_putl(15213);
     sio_puts("\n");
@@ -16595,7 +16595,7 @@ handler_t
 <p>SA_RESTART 解决另一个问题。进程阻塞在 read、wait 这类可能长时间等待的系统调用中时，如果有信号到来并执行了处理程序，处理程序返回后，这个系统调用默认会失败返回 −1，errno 为 EINTR（interrupted system call）。设置了 SA_RESTART，内核会自动重新开始这个系统调用，调用者察觉不到中断。对 tsh 来说这一点至关重要：shell 大部分时间阻塞在 main 的 fgets（内部是 read）中等待用户输入，后台作业随时可能结束并带来 SIGCHLD；没有 SA_RESTART，fgets 会因 EINTR 返回 NULL 且 ferror(stdin) 为真，main 就调用 app_error("fgets error") 退出了。</p>
 <h4 id="lab-shelllab-s28">实测：返回值、SA_RESTART、处理程序运行期间的阻塞、execve 之后<a class="anchor" href="#lab-shelllab-s28">#</a></h4>
 <p>四个小程序都包含 handout 的 tsh.c，用的就是 tsh.c 中的 Signal。第一个看 Signal 的返回值：</p>
-<figure class="code"><div class="code-title"><span style="color:#7F7F7F"><strong>sim/e4_signal/ret.c（节选）</strong></span></div><pre><code>static void h1(int sig) { (void)sig; }
+<figure class="code"><div class="code-title"><span style="color:#7F7F7F"><strong>ret.c（节选）</strong></span></div><pre><code>static void h1(int sig) { (void)sig; }
 static void h2(int sig) { (void)sig; }
 ...
     old = Signal(SIGINT, h1);
@@ -16622,7 +16622,7 @@ Signal error: Invalid argument
 （退出码 1）</code></pre></figure>
 <p>返回值总是这一次调用<strong>之前</strong>的处理方式，第一次安装时是 SIG_DFL。把返回值存起来，以后再传给 Signal，就能恢复原来的设置。main 中的六次调用都没有使用返回值，tsh 中一般也用不到它。SIGKILL 和 SIGSTOP 不能被捕获或忽略，对它们调用 sigaction 会失败（EINVAL），Signal 随即打印“Signal error: Invalid argument”并退出。</p>
 <p>第二个程序在 read 等待输入的过程中用 alarm 安排一个 SIGALRM，对比用 Signal 安装（带 SA_RESTART）和 sa_flags 为 0 的两种情况；管道另一端 2 秒后才写入 hello，SIGALRM 在 1 秒时到达：</p>
-<figure class="code"><div class="code-title"><span style="color:#7F7F7F"><strong>sim/e4_signal/restart.c（节选）</strong></span></div><pre><code>static void on_alarm(int sig) { (void)sig; sio_puts("  [SIGALRM 处理程序运行了]\n"); }
+<figure class="code"><div class="code-title"><span style="color:#7F7F7F"><strong>restart.c（节选）</strong></span></div><pre><code>static void on_alarm(int sig) { (void)sig; sio_puts("  [SIGALRM 处理程序运行了]\n"); }
 ...
     if (argc &gt; 1) {                             /* 不带 SA_RESTART 的安装方式 */
         struct sigaction act;
@@ -16642,7 +16642,7 @@ sa_flags = 0：
   [SIGALRM 处理程序运行了]
   read 返回 -1，errno = Interrupted system call</code></pre></figure>
 <p>第三个程序让子进程向父进程先发一个 SIGUSR1，在 USR1 的处理程序运行期间（它忙等 0.6 秒）再连发两个 SIGUSR1 和一个 SIGUSR2：</p>
-<figure class="code"><div class="code-title"><span style="color:#7F7F7F"><strong>sim/e4_signal/nest.c（节选）</strong></span></div><pre><code>static void h_usr1(int sig)
+<figure class="code"><div class="code-title"><span style="color:#7F7F7F"><strong>nest.c（节选）</strong></span></div><pre><code>static void h_usr1(int sig)
 {
     (void)sig;
     sio_puts("USR1 处理程序：开始\n");
@@ -16812,7 +16812,7 @@ if (job == NULL) {
 }</code></pre></figure>
 <p><code>tok.argv[1] + 1</code> 是指针运算：跳过第一个字符 %，指向后面的数字。用之前还要先确认 argv[1] 不是 NULL（用户只输入了 bg）。</p>
 <p>提示语必须与 tshref 逐字相同。表 11 是在默认环境上对 tshref 输入各种有误的参数得到的输出，可以直接作为对照。</p>
-<p class="cap"><span style="color:#1F3864"><strong>表 11　tshref 对有误参数和打不开的文件的提示语（默认环境实测，sim/e7_tshref）</strong></span></p>
+<p class="cap"><span style="color:#1F3864"><strong>表 11　tshref 对有误参数和打不开的文件的提示语（默认环境实测）</strong></span></p>
 <div class="scroll"><table><thead><tr><th><span style="color:#1F3864"><strong>输入</strong></span></th><th><span style="color:#1F3864"><strong>tshref 的输出</strong></span></th></tr></thead><tbody><tr><td>bg</td><td>bg command requires PID or %jobid argument</td></tr><tr><td>fg</td><td>fg command requires PID or %jobid argument</td></tr><tr><td>kill</td><td>kill command requires PID or %jobid argument</td></tr><tr><td>bg abc</td><td>bg: argument must be a PID or %jobid</td></tr><tr><td>fg %abc</td><td>%abc: No such job</td></tr><tr><td>bg %5（没有这个作业）</td><td>%5: No such job</td></tr><tr><td>fg 99999（没有这个进程）</td><td>(99999): No such process</td></tr><tr><td>kill %3</td><td>%3: No such job</td></tr><tr><td>kill 99999</td><td>(99999): No such process</td></tr><tr><td>kill %-3</td><td>%-3: No such process group</td></tr><tr><td>kill -99999</td><td>(99999): No such process group</td></tr><tr><td>nohup</td><td>(null): Command not found</td></tr><tr><td>/bin/cat &lt; nofile.txt</td><td>Error: nofile.txt No such file or directory</td></tr><tr><td>jobs &gt; /nonexistdir/x</td><td>Error: /nonexistdir/x Couldn't open file</td></tr><tr><td>./nonexist</td><td>./nonexist: Command not found</td></tr></tbody></table></div>
 <p>其中有几处细节容易忽略，<code>fg %abc</code> 报的是“No such job”而不是参数格式错误；<code>kill -99999</code> 的输出中括号里没有负号；单独的 nohup 会把 NULL 当作程序名，输出“(null): Command not found”。这些都要按 tshref 的输出复现。</p>
 <div class="box qa"><p class="box-title"><span style="color:#7030A0"><strong>常见问题：内置命令为什么不能像普通程序那样 fork 一个子进程来做？</strong></span></p><p>因为内置命令要改变的是 shell 自己的状态。quit 要结束的是 shell 进程本身；jobs 要读的作业列表、bg 和 fg 要修改的作业状态，都在 shell 进程的全局变量 job_list 中。如果在子进程中执行，子进程修改的只是自己那份 job_list 的副本（fork 之后父子进程的内存相互独立），子进程退出后一切修改都消失，shell 的作业列表没有任何变化。</p><p>所以 eval 的第一件事是看 builtins：是内置命令就在 shell 进程中直接执行，然后返回读下一行；不是内置命令才 fork。</p></div>
@@ -16839,7 +16839,7 @@ int execve(const char *path, char *const argv[], char *const envp[]);</code></pr
 <p>fork 调用一次返回两次：在父进程中返回子进程的 pid，在子进程中返回 0，失败时返回 −1（只在父进程中返回，也不会创建子进程）。子进程得到父进程的一份副本，包括全局变量 job_list、信号处理方式、阻塞的信号集合和打开的描述符。tsh 用 fork.c 替换了 fork（第 0.1 节），fork 返回后父子两边可能随机睡眠最多 0.1 秒，所以不能假设哪一边先运行。</p>
 <p>execve 在当前进程中装入并运行另一个程序：path 是程序文件的路径，argv 是参数数组（以 NULL 结尾，argv[0] 按惯例是程序名），envp 是环境变量表，在 tsh 中就是 environ（第 1.6 节）。parseline 给出的 tok.argv 正好可以直接使用：<code>execve(tok.argv[0], tok.argv, environ)</code>。tsh 没有搜索路径，用户必须写出完整路径（<code>/bin/ls</code> 而不是 <code>ls</code>）。</p>
 <p>execve 成功时不返回：当前进程的代码已经被换成了新程序，调用 execve 之后的语句再也不会执行。所以只要 execve 返回了，就一定是失败了，不必检查返回值是不是 −1。下面的程序依次运行三个不能运行的路径：</p>
-<figure class="code"><div class="code-title"><span style="color:#7F7F7F"><strong>sim/e8_exec/exec.c（节选）</strong></span></div><pre><code>static void try(char *path)
+<figure class="code"><div class="code-title"><span style="color:#7F7F7F"><strong>exec.c（节选）</strong></span></div><pre><code>static void try(char *path)
 {
     char *argv[] = {path, NULL};
     pid_t pid = fork();
@@ -16858,7 +16858,7 @@ int execve(const char *path, char *const argv[], char *const envp[]);</code></pr
   execve("./notexec.txt") 失败：errno = 13（Permission denied）
   execve("/tmp") 失败：errno = 13（Permission denied）</code></pre></figure>
 <p>tshref 对这种情况打印“程序名: Command not found”（第 1.17 节的提示语表），然后子进程退出。子进程<strong>必须</strong>退出：它是 shell 的一个副本，execve 失败后如果继续往下执行，就会回到 eval 的调用者 main，开始和真正的 shell 抢着读下一行命令。程序的后半部分模拟了这种错误，在一个两轮的“读—求值循环”中，子进程 execve 失败后忘了 exit：</p>
-<figure class="code"><div class="code-title"><span style="color:#7F7F7F"><strong>sim/e8_exec/exec.c（节选）</strong></span></div><pre><code>    for (int line = 1; line &lt;= 2; line++) {     /* 模拟 shell 的读-求值循环 */
+<figure class="code"><div class="code-title"><span style="color:#7F7F7F"><strong>exec.c（节选）</strong></span></div><pre><code>    for (int line = 1; line &lt;= 2; line++) {     /* 模拟 shell 的读-求值循环 */
         pid_t pid = fork();
         if (pid == 0) {
             char *a[] = {"./nonexist", NULL};
@@ -16885,7 +16885,7 @@ int execve(const char *path, char *const argv[], char *const envp[]);</code></pr
 <figure class="fig"><img src="img/lab-shelllab/img7.png" alt="" loading="lazy" style="width:94%"></figure>
 <p class="cap"><span style="color:#1F3864"><strong>图 7　进程组与 ctrl-c 的转发：每个作业自成一组，内核只把 SIGINT 发给 tsh，tsh 再用 kill(-pid, SIGINT) 转发给前台作业的整个进程组</strong></span></p>
 <p>作业的 pid 就是它的进程组号，所以“前台作业的进程组”可以直接用 <code>-fgpid(job_list)</code> 表示。下面的程序验证子进程、孙进程的进程组，以及向整个组发信号的效果：</p>
-<figure class="code"><div class="code-title"><span style="color:#7F7F7F"><strong>sim/e9_pgrp/pgrp.c（节选）</strong></span></div><pre><code>    child = fork();
+<figure class="code"><div class="code-title"><span style="color:#7F7F7F"><strong>pgrp.c（节选）</strong></span></div><pre><code>    child = fork();
     /* 子进程：先建自己的进程组，再生一个孙进程 */
     if (child == 0) {
         setpgid(0, 0);
@@ -16922,7 +16922,7 @@ shell：kill(-934, SIGINT) 返回 -1，errno = No such process</code></pre></fig
 <p class="cap"><span style="color:#1F3864"><strong>表 14　kill 的第一个参数</strong></span></p>
 <div class="scroll"><table><thead><tr><th><span style="color:#1F3864"><strong>pid</strong></span></th><th><span style="color:#1F3864"><strong>发给谁</strong></span></th><th><span style="color:#1F3864"><strong>tsh 中的用途</strong></span></th></tr></thead><tbody><tr><td>pid &gt; 0</td><td>进程号为 pid 的那个进程</td><td>只想发给作业的那个子进程时</td></tr><tr><td>pid &lt; 0</td><td>进程组号为 −pid 的组中所有进程</td><td>转发 ctrl-c、ctrl-z；bg、fg 发 SIGCONT</td></tr><tr><td>pid = 0</td><td><strong>调用者自己所在的进程组</strong>，包括调用者自己</td><td>不要用</td></tr><tr><td>sig = 0</td><td>不发信号，只检查目标是否存在</td><td>判断进程是否还在</td></tr></tbody></table></div>
 <p>pid 为 0 这一行是 tsh 中一个隐蔽的陷阱。fgpid 在没有前台作业时返回 0，如果 sigint_handler 不加判断就执行 <code>kill(-fgpid(job_list), SIGINT)</code>，实际调用的是 <code>kill(0, SIGINT)</code>，信号发给了 tsh 自己所在的进程组，tsh 自己就被终止了：</p>
-<figure class="code"><div class="code-title"><span style="color:#7F7F7F"><strong>sim/e9_pgrp/zero.c（节选）</strong></span></div><pre><code>    /* 一个小 shell：自成一组，再带一个后台子进程 */
+<figure class="code"><div class="code-title"><span style="color:#7F7F7F"><strong>zero.c（节选）</strong></span></div><pre><code>    /* 一个小 shell：自成一组，再带一个后台子进程 */
     if (sh == 0) {
         setpgid(0, 0);
         if (fork() == 0) { pause(); _exit(0); }
@@ -16944,7 +16944,7 @@ shell：kill(-934, SIGINT) 返回 -1，errno = No such process</code></pre></fig
 <div class="scroll"><table><thead><tr><th><span style="color:#1F3864"><strong>函数</strong></span></th><th><span style="color:#1F3864"><strong>作用</strong></span></th><th><span style="color:#1F3864"><strong>说明</strong></span></th></tr></thead><tbody><tr><td>sigemptyset(&amp;set)</td><td>set = {}</td><td>sigset_t 变量使用前必须先初始化</td></tr><tr><td>sigfillset(&amp;set)</td><td>set = {所有信号}</td><td>处理程序中临时阻塞所有信号时用</td></tr><tr><td>sigaddset(&amp;set, SIGCHLD)</td><td>加入一个信号</td><td>一次只能加一个，要加三个就调用三次</td></tr><tr><td>sigdelset(&amp;set, SIGCHLD)</td><td>删除一个信号</td><td></td></tr><tr><td>sigismember(&amp;set, SIGCHLD)</td><td>是否在集合中</td><td>在返回 1，不在返回 0</td></tr></tbody></table></div>
 <figure class="code"><pre><code>int sigprocmask(int how, const sigset_t *set, sigset_t *oldset);</code></pre></figure>
 <p>how 决定怎样修改阻塞集合：SIG_BLOCK 把 set 中的信号<strong>加入</strong>阻塞集合，SIG_UNBLOCK 把它们<strong>移出</strong>阻塞集合，SIG_SETMASK 把阻塞集合<strong>整个替换</strong>为 set。oldset 不为 NULL 时，修改之前的阻塞集合被存进去，之后用 SIG_SETMASK 把它放回去，就精确地恢复了原状。下面的程序阻塞 SIGCHLD 后创建一个立即结束的子进程，再恢复：</p>
-<figure class="code"><div class="code-title"><span style="color:#7F7F7F"><strong>sim/e10_mask/mask.c（节选）</strong></span></div><pre><code>    sigemptyset(&amp;mask);                          /* mask = {} */
+<figure class="code"><div class="code-title"><span style="color:#7F7F7F"><strong>mask.c（节选）</strong></span></div><pre><code>    sigemptyset(&amp;mask);                          /* mask = {} */
     sigaddset(&amp;mask, SIGCHLD);                   /* mask = {SIGCHLD} */
     /* 阻塞集合 |= mask；原来的阻塞集合存进 prev */
     sigprocmask(SIG_BLOCK, &amp;mask, &amp;prev);
@@ -16983,7 +16983,7 @@ while (条件不成立)
     sigsuspend(&amp;prev);
 sigprocmask(SIG_SETMASK, &amp;prev, NULL);</code></pre></figure>
 <p>下面的程序故意让子进程在检查条件之前就结束，对比两种写法。pause 版本是“检查、解除阻塞、pause”三步分开的写法：</p>
-<figure class="code"><div class="code-title"><span style="color:#7F7F7F"><strong>sim/e11_suspend/suspend.c（节选）</strong></span></div><pre><code>/* 处理程序与主程序共享的标志，相当于 fgpid() == 0 */
+<figure class="code"><div class="code-title"><span style="color:#7F7F7F"><strong>suspend.c（节选）</strong></span></div><pre><code>/* 处理程序与主程序共享的标志，相当于 fgpid() == 0 */
 static volatile sig_atomic_t fg_done = 0;
 
 static void chld(int sig)
@@ -17026,7 +17026,7 @@ sigsuspend 版本：
 <p class="cap"><span style="color:#1F3864"><strong>表 17　waitpid 的返回值与 status 的解读</strong></span></p>
 <div class="scroll"><table><thead><tr><th><span style="color:#1F3864"><strong>情况</strong></span></th><th><span style="color:#1F3864"><strong>怎样判断</strong></span></th></tr></thead><tbody><tr><td>返回一个子进程的 pid</td><td>这个子进程的状态变了，用下面的宏看 status</td></tr><tr><td>WIFEXITED(status) 为真</td><td>正常退出（exit 或从 main 返回），退出码是 WEXITSTATUS(status)</td></tr><tr><td>WIFSIGNALED(status) 为真</td><td>被一个信号终止，信号是 WTERMSIG(status)</td></tr><tr><td>WIFSTOPPED(status) 为真</td><td>被一个信号停止，信号是 WSTOPSIG(status)（只在用了 WUNTRACED 时出现）</td></tr><tr><td>WIFCONTINUED(status) 为真</td><td>被 SIGCONT 继续（只在用了 WCONTINUED 时出现）</td></tr><tr><td>返回 0</td><td>用了 WNOHANG，而且没有子进程状态变化</td></tr><tr><td>返回 −1，errno 为 ECHILD</td><td>已经没有子进程了</td></tr></tbody></table></div>
 <p>下面的程序制造三个子进程：一个 exit(3)，一个被 SIGINT 终止，一个被 SIGTSTP 停止（之后用 SIGCONT 继续、再用 SIGTERM 终止），用不同的选项观察：</p>
-<figure class="code"><div class="code-title"><span style="color:#7F7F7F"><strong>sim/e12_waitpid/status.c（节选）</strong></span></div><pre><code>static void explain(pid_t pid, int st)
+<figure class="code"><div class="code-title"><span style="color:#7F7F7F"><strong>status.c（节选）</strong></span></div><pre><code>static void explain(pid_t pid, int st)
 {
     printf("  waitpid 返回 %d，", (int)pid);
     if (WIFEXITED(st))         printf("WIFEXITED：正常退出，WEXITSTATUS = %d\n",
@@ -17065,7 +17065,7 @@ sigsuspend 版本：
   waitpid 返回 -1，errno = No child processes</code></pre></figure>
 <p>结果说明了 sigchld_handler 为什么需要 WUNTRACED：不加它，被 ctrl-z 停止的前台作业不会被报告，shell 就不知道要把它改成 ST。信号编号 2、15、20 分别是 SIGINT、SIGTERM、SIGTSTP，tshref 打印“terminated by signal 2”“stopped by signal 20”时用的就是 WTERMSIG、WSTOPSIG 的值。</p>
 <p>第 1.14 节的实验表明，几个 SIGCHLD 同时到达时只会被处理一次。下面的程序让 5 个子进程在 SIGCHLD 被阻塞时全部结束，再解除阻塞，对比处理程序中“回收一个”和“循环回收”两种写法：</p>
-<figure class="code"><div class="code-title"><span style="color:#7F7F7F"><strong>sim/e12_waitpid/merge.c（节选）</strong></span></div><pre><code>static void chld(int sig)
+<figure class="code"><div class="code-title"><span style="color:#7F7F7F"><strong>merge.c（节选）</strong></span></div><pre><code>static void chld(int sig)
 {
     (void)sig;
     calls++;
@@ -17087,7 +17087,7 @@ int close(int fd);</code></pre></figure>
 <p class="cap"><span style="color:#1F3864"><strong>表 18　重定向时 open 的参数</strong></span></p>
 <div class="scroll"><table><thead><tr><th><span style="color:#1F3864"><strong>重定向</strong></span></th><th><span style="color:#1F3864"><strong>open 的参数</strong></span></th><th><span style="color:#1F3864"><strong>说明</strong></span></th></tr></thead><tbody><tr><td>&lt; infile</td><td>open(infile, O_RDONLY)</td><td>文件必须存在，否则失败（ENOENT）</td></tr><tr><td>&gt; outfile</td><td>open(outfile, O_WRONLY | O_CREAT | O_TRUNC, 0644)</td><td>不存在就创建，存在就清空；0644 是新文件的权限 rw-r--r--</td></tr></tbody></table></div>
 <p>打开之后，用 <code>dup2(fd, STDIN_FILENO)</code> 或 <code>dup2(fd, STDOUT_FILENO)</code> 把描述符 0 或 1 改为指向这个文件，再 close 原来的 fd。运行外部程序时，这一步要在子进程中、execve 之前完成：改的是子进程自己的描述符表，shell 的标准输出不受影响，而 execve 会保留描述符表（第 18 讲）。下面的程序用这个办法实现 <code>/bin/cat &lt; in.txt &gt; out.txt</code>，并对内置命令 jobs 做重定向：</p>
-<figure class="code"><div class="code-title"><span style="color:#7F7F7F"><strong>sim/e13_redir/redir.c（节选）</strong></span></div><pre><code>static int redirect(const char *infile, const char *outfile)   /* 在子进程中调用 */
+<figure class="code"><div class="code-title"><span style="color:#7F7F7F"><strong>redir.c（节选）</strong></span></div><pre><code>static int redirect(const char *infile, const char *outfile)   /* 在子进程中调用 */
 {
     int fd;
     if (infile) {
@@ -17120,7 +17120,7 @@ jobs &gt; jobs.txt 之后，jobs.txt 的内容：[1] (4242) Running    /bin/slee
 <p>内置命令 jobs 在 shell 进程中执行，不能 dup2 改 shell 自己的描述符 1（那样之后所有输出都会进文件），而 listjobs 本来就接受一个描述符参数，打开文件、传进去、关闭即可。第 2.9 节可以看到，tshref 对外部程序的重定向是在 fork <strong>之前</strong>由 shell 打开文件的：打不开就直接打印提示语，根本不创建子进程；子进程只做 dup2 和 close；父进程随后关闭自己的那份描述符。两种做法的输出相同，tshref 的做法让“文件打不开”的提示由 shell 打印，例如输入文件不存在时输出“Error: nofile.txt No such file or directory”（第 1.17 节的提示语表）。</p>
 <h3 id="lab-shelllab-s42">2.9　用 strace 看 tshref 怎样使用这些系统调用<a class="anchor" href="#lab-shelllab-s42">#</a></h3>
 <p>strace 记录一个进程调用的每个系统调用和收到的每个信号，<code>-f</code> 同时跟踪它创建的子进程。用它观察参考 shell，可以直接看到上面这些调用在 tshref 中的顺序。下面的脚本向 tshref 依次输入 7 条命令（<code>./mytstps</code> 运行后会自己发 SIGTSTP 停止自己）：</p>
-<figure class="code"><div class="code-title"><span style="color:#7F7F7F"><strong>sim/e14_trace/run.sh（节选）</strong></span></div><pre><code>{ echo './mytstps'; sleep 0.5; echo 'jobs'; sleep 0.3; echo 'bg %1'; sleep 0.5
+<figure class="code"><div class="code-title"><span style="color:#7F7F7F"><strong>run.sh（节选）</strong></span></div><pre><code>{ echo './mytstps'; sleep 0.5; echo 'jobs'; sleep 0.3; echo 'bg %1'; sleep 0.5
   echo '/bin/sleep 5 &amp;'; sleep 0.3; echo 'kill %1'; sleep 0.5
   echo '/bin/sleep 1 &amp;'; sleep 0.2; echo 'fg %1'; sleep 1.5; echo quit; } \
   | strace -f -e trace=$S -o trace1.txt ./tshref -p &gt; out1.txt 2&gt;&amp;1</code></pre></figure>
@@ -17233,7 +17233,6 @@ Job [1] (1801) terminated by signal 15
 <div class="scroll"><table><thead><tr><th><span style="color:#1F3864"><strong>命令</strong></span></th><th><span style="color:#1F3864"><strong>步骤</strong></span></th></tr></thead><tbody><tr><td>quit</td><td>结束 shell（exit(0)）。</td></tr><tr><td>jobs</td><td>没有 outfile 时，listjobs(job_list, STDOUT_FILENO)；有 outfile 时，open(outfile, O_WRONLY | O_CREAT | O_TRUNC, 0644)，失败则打印“Error: 文件名 Couldn't open file”，成功则 listjobs(job_list, fd) 后 close(fd)。</td></tr><tr><td>bg</td><td>检查 argv[1] 存在且格式正确（否则打印两种提示语之一）；按 % 开头与否用 getjobjid 或 getjobpid 找作业（找不到打印“%N: No such job”或“(N): No such process”）；kill(-pid, SIGCONT)；state 改为 BG；打印“[jid] (pid) 命令行”（与新建后台作业时相同）。</td></tr><tr><td>fg</td><td>前三步同 bg；state 改为 FG；然后像运行前台程序一样，用 sigsuspend 等待它不再处于前台（第 2.6 节）。</td></tr><tr><td>kill</td><td>检查参数；参数为正数时找到作业，kill(pid, SIGTERM)；为负数时（"%-N" 或 "-N"）找到作业后向它的进程组发 kill(-pid, SIGTERM)，找不到时打印“No such process group”的提示语。作业的删除和“terminated by signal 15”的输出由 sigchld_handler 完成。</td></tr><tr><td>nohup</td><td>与运行普通程序相同（阻塞、fork、子进程恢复阻塞集合、setpgid、重定向、execve、父进程 addjob、恢复、前台则等待），只是子进程在 execve 之前多一步：用 sigprocmask 阻塞 SIGHUP（tshref 的做法，第 2.9 节）；运行的是 argv[1]，参数数组是 &amp;argv[1]。</td></tr></tbody></table></div>
 <p>写完一个命令，就用对应的 trace 与 tshref 比较（第 0.3 节）：<code>./sdriver -t 15 -V</code> 同时显示自己的输出和参考输出，逐行对照，差一个空格也会判为失败。</p>
 <h2 id="lab-shelllab-s44">第三部分　内置命令<a class="anchor" href="#lab-shelllab-s44">#</a></h2>
-<p>从这一部分起，按动手时实际遇到问题的顺序写出完整的 tsh。每一步先说要做什么、对应哪几个 trace，再写出最先想到的写法，用 trace 或小实验检验它，看到问题之后分析原因、改正，最后留下一条规律。文中的错误写法都是在参考解答上改动一处得到的（sim/variants.py），每一个都在默认环境上编译运行过，输出照录；参考解答在 sim/sol/ 中，sdriver 得 100 分（第 7.1 节）。</p>
 <h3 id="lab-shelllab-s45">3.1　eval 的第一个分支：是不是内置命令<a class="anchor" href="#lab-shelllab-s45">#</a></h3>
 <p>trace00、trace01 只要求读到文件末尾时退出、遇到 quit 时退出，前者 main 已经做好，后者是动手的第一步。打开 eval 的空壳，第一个问题就是 parseline 填好的 tok.builtins 是一个 enum（第 1.8 节），怎样据此分支。enum 的值就是一组有名字的整数常量，最自然的写法是 switch，每个 case 对应一个内置命令，BUILTIN_NONE 对应“不是内置命令”。</p>
 <p>第二个问题是内置命令要不要区分前台和后台。不需要：内置命令在 shell 进程中直接执行（第 1.17 节的常见问题），执行完 eval 就返回，没有“等它结束”这一说；<code>jobs &amp;</code> 中的 &amp; 被 parseline 去掉后不起任何作用。需要区分前台后台的只有运行外部程序这一支。</p>
@@ -17272,7 +17271,7 @@ eval(char *cmdline)
 <figure class="fig"><img src="img/lab-shelllab/img9.png" alt="" loading="lazy" style="width:94%"></figure>
 <p class="cap"><span style="color:#1F3864"><strong>图 9　参考解答中自写函数的调用关系（橙色是实验要求补全的四个函数，蓝色是自写的辅助函数，灰色是 tsh.c 已给的函数）</strong></span></p>
 <p>case 后面直接写声明是另一个常见的疑问。下面的片段在 case 标号后面声明了变量：</p>
-<figure class="code"><div class="code-title"><span style="color:#7F7F7F"><strong>sim/s2_builtin/case_decl.c（节选）</strong></span></div><pre><code>    switch (builtin) {
+<figure class="code"><div class="code-title"><span style="color:#7F7F7F"><strong>case_decl.c（节选）</strong></span></div><pre><code>    switch (builtin) {
     case 5:
         long id = atol(arg);
         return (int) id;</code></pre></figure>
@@ -17321,7 +17320,7 @@ builtin_jobs(struct cmdline_tokens *tok)
 <p>trace15 起要实现 bg、fg，trace26 起要实现 kill，三个命令都要先把参数换成作业。第 1.17 节已经给出了基本做法：参数以 % 开头的是作业号，交给 getjobjid；否则是进程号，交给 getjobpid；返回 NULL 就是找不到。作业号 jid 是 shell 自己编的号码（%1 的 1），进程号 pid 是内核分配的号码，两个函数查的是同一张 job_list，只是比较的字段不同。</p>
 <p>动手时会遇到的第一个问题是怎样从字符串 "%12" 中取出 "12"。C 没有切片操作，也不需要：字符串就是指向第一个字符的指针，<code>arg + 1</code> 指向第二个字符，从那里开始的字符串就是 "12"，可以直接交给 atoi。</p>
 <p>第二个问题是解析的结果怎样交给调用者。解析要给出两样东西：是作业号还是进程号，以及数值本身。一个自然的想法是写一个函数，把两样东西放进一个两元素的数组返回：</p>
-<figure class="code"><div class="code-title"><span style="color:#7F7F7F"><strong>sim/s2_builtin/local_array.c</strong></span></div><pre><code>/* local_array.c：解析 "%12" 或 "12"，把结果放在局部数组里返回 */
+<figure class="code"><div class="code-title"><span style="color:#7F7F7F"><strong>local_array.c</strong></span></div><pre><code>/* local_array.c：解析 "%12" 或 "12"，把结果放在局部数组里返回 */
 #include &lt;stdlib.h&gt;
 
 long *parse_id(char *arg)
@@ -17337,7 +17336,7 @@ long *parse_id(char *arg)
 10:12: error: function returns address of local variable [-Werror=return-local-addr]</code></pre></figure>
 <p>res 是局部变量，存放在 parse_id 的栈帧中，函数返回后这块栈空间就交还了，下一次函数调用会覆盖它，调用者拿到的指针指向已经无效的内存（第 6 讲的栈帧）。gcc 不但报错，在不加 -Werror 时还会故意让这个函数返回 NULL，让错误尽早暴露。改法有三种：由调用者提供数组，函数通过参数把结果写进去（输出参数）；返回一个结构体（结构体按值返回，没有这个问题）；或者干脆不写单独的函数，在使用的地方直接判断。参考解答用的是最后一种，判断只有两三行，写在 builtin_bgfg 和 builtin_kill 中，查表和提示语则集中到 find_job 中（第 3.5 节）。</p>
 <p>第三个问题是哪些参数算格式错误。trace 只用到 <code>%1</code>、<code>%-1</code> 这样的正常参数，但 tshref 的行为就是规格，不确定时先在 tshref 上试。表 20 把同一批参数分别交给参考解答和 tshref，两边逐行相同。</p>
-<p class="cap"><span style="color:#1F3864"><strong>表 20　参考解答与 tshref 对各种参数的输出（默认环境实测，sim/s2_builtin；先运行了 /bin/sleep 5 &amp;，它是作业 1）</strong></span></p>
+<p class="cap"><span style="color:#1F3864"><strong>表 20　参考解答与 tshref 对各种参数的输出（默认环境实测；先运行了 /bin/sleep 5 &amp;，它是作业 1）</strong></span></p>
 <div class="scroll"><table><thead><tr><th><span style="color:#1F3864"><strong>输入</strong></span></th><th><span style="color:#1F3864"><strong>两边相同的输出</strong></span></th><th><span style="color:#1F3864"><strong>说明</strong></span></th></tr></thead><tbody><tr><td>bg</td><td>bg command requires PID or %jobid argument</td><td>没有参数</td></tr><tr><td>bg abc</td><td>bg: argument must be a PID or %jobid</td><td>不以 % 或数字开头</td></tr><tr><td>fg %abc</td><td>%abc: No such job</td><td>% 之后用 atoi，"abc" 得 0，没有作业 0</td></tr><tr><td>bg %5</td><td>%5: No such job</td><td></td></tr><tr><td>fg 99999</td><td>(99999): No such process</td><td></td></tr><tr><td>fg -5</td><td>fg: argument must be a PID or %jobid</td><td>bg、fg 不接受负号</td></tr><tr><td>bg %1</td><td>[1] (PID) /bin/sleep 5 &amp;</td><td>作业 1 已在后台运行，仍然打印</td></tr><tr><td>kill %abc</td><td>kill: argument must be a PID or %jobid</td><td>kill 要求 % 之后是数字或负号加数字</td></tr><tr><td>kill %-3</td><td>%-3: No such process group</td><td></td></tr><tr><td>kill -99999</td><td>(99999): No such process group</td><td>括号中没有负号</td></tr><tr><td>kill -5x</td><td>(5): No such process group</td><td>数字后面的多余字符被 atoi 忽略</td></tr><tr><td>kill 0</td><td>(0): No such process</td><td>getjobpid 对 pid 小于 1 直接返回 NULL</td></tr></tbody></table></div>
 <p>从表中可以归纳出 tshref 的规则：bg、fg 的参数以 % 开头时，其余部分直接交给 atoi；不以 % 开头时，第一个字符必须是数字。kill 允许在 % 之后、或者在开头，出现一个负号，负号之后必须是数字。参考解答照这个规则写判断（第 3.4、3.5 节的代码），其余情况交给 atoi 和查表的结果，就与 tshref 一致了。</p>
 <p>最后一个问题出在打印提示语上。“%1: No such job”中的 %1 是用户输入的原样，把它直接写进 printf 的格式串，编译就会失败：</p>
@@ -17482,7 +17481,7 @@ tsh&gt; jobs
 <p>参考输出中 bg 之后有一行“[1] (10117) ./mytstpp”，格式与新建后台作业时打印的那一行相同。这类“自己想不到的输出”，最可靠的发现办法是对照 tshref：写完一个命令，就用 <code>./sdriver -t 编号 -V</code> 逐行比较。</p>
 <p>还有三处值得说明。第一，SIGCONT 发给整个进程组（<code>-job-&gt;pid</code>）：作业被 ctrl-z 停止时，停止的是整个前台进程组（第 2.3 节），继续时也要让组里的每个进程都继续，trace21 测的正是这一点。第二，对一个正在后台运行的作业执行 bg 也是合法的，SIGCONT 对正在运行的进程没有影响，tshref 照样打印那一行（表 20）。第三，fg 把状态改为 FG 之后，像运行前台程序一样调用 wait_fg 等待它结束或再次停止；wait_fg 要求调用时信号已经阻塞，所以它放在阻塞区之内，第 6.1 节专门讲它。</p>
 <h2 id="lab-shelllab-s50">第四部分　运行外部程序<a class="anchor" href="#lab-shelllab-s50">#</a></h2>
-<p>不是内置命令的一行，要在子进程中运行。trace02–04 只要求能运行程序并等它结束，trace05–07 加上后台运行，trace22–24 加上重定向，trace25 加上 nohup。这一部分按这个顺序写出 run_job 和它调用的 run_child，等待前台作业的 wait_fg 和信号的阻塞留到第六部分。图 10 是写完之后两个函数的全貌：左边是 shell 进程中 run_job 的步骤，右边是子进程中 run_child 的步骤。</p>
+<p>不是内置命令的一行，要在子进程中运行：trace02–04 要求运行程序并等它结束，trace05–07 加上后台运行，trace22–24 加上重定向，trace25 加上 nohup。图 10 是 shell 进程中 run_job 与子进程中 run_child 的完整步骤；等待前台作业的 wait_fg 和信号阻塞见第六部分。</p>
 <figure class="fig"><img src="img/lab-shelllab/img10.png" alt="" loading="lazy" style="width:94%"></figure>
 <p class="cap"><span style="color:#1F3864"><strong>图 10　运行一个外部程序时，shell（run_job）与子进程（run_child）各做哪几步；括号中是讲解它的小节</strong></span></p>
 <h3 id="lab-shelllab-s51">4.1　fork 与 execve：execve 失败之后<a class="anchor" href="#lab-shelllab-s51">#</a></h3>
@@ -17613,7 +17612,7 @@ Reference output:
 Job [1] (16026) terminated by signal 1</code></pre></figure>
 <p>要运行的程序从 argv[1] 开始，参数数组从 &amp;argv[1] 开始。argv 是指向字符串指针的指针，<code>argv++</code> 之后 argv[0] 就是原来的 argv[1]，数组仍以 NULL 结尾，可以直接交给 execve。单独输入 nohup 时 argv[1] 是 NULL，execve 失败，printf 把 NULL 字符串打印成 “(null)”，正好与 tshref 的“(null): Command not found”一致（这是 glibc 的行为，C 标准并不保证）。</p>
 <p>怎样让程序不受 SIGHUP 影响，有两种做法：忽略它（SIG_IGN），或者阻塞它。两种做法都能通过 trace25，因为 myhup 只是给自己发一次 SIGHUP：忽略时信号被丢弃，阻塞时信号一直待处理，程序照常退出。差别出现在程序自己修改阻塞集合的时候。下面的 hupself 先清空自己的阻塞集合，再给自己发 SIGHUP：</p>
-<figure class="code"><div class="code-title"><span style="color:#7F7F7F"><strong>sim/s3_exec/hupself.c</strong></span></div><pre><code>/* hupself.c：先清空自己的阻塞集合，再给自己发 SIGHUP；活下来就打印 survived */
+<figure class="code"><div class="code-title"><span style="color:#7F7F7F"><strong>hupself.c</strong></span></div><pre><code>/* hupself.c：先清空自己的阻塞集合，再给自己发 SIGHUP；活下来就打印 survived */
 #include &lt;signal.h&gt;
 #include &lt;stdio.h&gt;
 #include &lt;unistd.h&gt;
@@ -17705,7 +17704,7 @@ run_job(struct cmdline_tokens *tok, int bg, char *cmdline)
 <p>后台作业的那一行“[1] (pid) ./myspin1 &amp;”由 shell 打印，用的 cmdline 是用户输入的原样，包括末尾的 &amp;；jid 要在 addjob 之后才知道，所以先 addjob，再用 getjobpid 取回作业。addjob 在作业列表已满（16 个）时打印“Tried to create too many jobs”并返回 0，这时不再打印那一行。</p>
 <p>还剩三处没有解释，即为什么 fork 之前要阻塞信号，父进程的 setpgid 为什么只容忍 EACCES，wait_fg 怎样等待。它们都与信号到来的时机有关，放到第六部分。</p>
 <h2 id="lab-shelllab-s57">第五部分　信号处理程序<a class="anchor" href="#lab-shelllab-s57">#</a></h2>
-<p>写到 trace08，前台作业开始被信号终止、停止，三个处理程序就不能再是空函数了。这一部分先弄清处理程序是怎样被调用的，再依次写 sigchld_handler 和 sigint_handler、sigtstp_handler。</p>
+<p>写到 trace08，前台作业开始被信号终止、停止，三个信号处理程序就不能再是空函数了。</p>
 <h3 id="lab-shelllab-s58">5.1　处理程序在什么时候运行<a class="anchor" href="#lab-shelllab-s58">#</a></h3>
 <p>动手写 sigchld_handler 之前，最常见的困惑是“它到底是怎样工作的”：没有任何代码调用它，它却会被执行。图 11 以一个前台作业被 ctrl-c 终止为例，画出了整个过程。</p>
 <figure class="fig"><img src="img/lab-shelllab/img11.png" alt="" loading="lazy" style="width:94%"></figure>
@@ -17801,7 +17800,7 @@ sigchld_handler(int sig)
       |                                   ^~~~~
       |                                   |
       |                                   sigset_t **</code></pre></figure>
-<p>第二个错误编译器查不出来：把 sigfillset 的返回值判断写反，写成 <code>if (sigfillset(&amp;all) == 0 || ...)</code>。sigfillset 成功时返回 0，于是每一次都当作失败。把参考解答的 sigchld_handler 改成这样，运行 <code>/bin/echo hello</code>，hello 照常打印，接着第一个 SIGCHLD 到来，处理程序打印“sigprocmask error”并以退出码 1 结束 shell；sdriver 中 trace01（只有 quit）照样通过，从 trace02 起全部失败（sim/s7_extra）。系统调用和库函数的约定几乎都是“0 或非负表示成功、−1 表示失败”，判断失败统一写 <code>&lt; 0</code>，就不会弄反。</p>
+<p>第二个错误编译器查不出来：把 sigfillset 的返回值判断写反，写成 <code>if (sigfillset(&amp;all) == 0 || ...)</code>。sigfillset 成功时返回 0，于是每一次都当作失败。把参考解答的 sigchld_handler 改成这样，运行 <code>/bin/echo hello</code>，hello 照常打印，接着第一个 SIGCHLD 到来，处理程序打印“sigprocmask error”并以退出码 1 结束 shell；sdriver 中 trace01（只有 quit）照样通过，从 trace02 起全部失败。系统调用和库函数的约定几乎都是“0 或非负表示成功、−1 表示失败”，判断失败统一写 <code>&lt; 0</code>，就不会弄反。</p>
 <h3 id="lab-shelllab-s62">5.5　sigint_handler 与 sigtstp_handler：if 还是 while<a class="anchor" href="#lab-shelllab-s62">#</a></h3>
 <p>两个处理程序做的事相同：如果有前台作业，就把收到的信号转发给它的进程组；没有前台作业就什么也不做（trace13、14 要求 ctrl-c、ctrl-z 只影响前台作业）。</p>
 <p>写这一步时，常会把“如果有前台作业”写成 while：既然要让前台作业结束，就一直发，直到没有前台作业为止。trace08 中，myintp 给它的父进程（shell）发一个 SIGINT，shell 应当把它转发回去，让 myintp 终止。用 while 的版本在这里卡住：</p>
@@ -17846,7 +17845,7 @@ sigtstp_handler(int sig)
 <p>为了让每一种出错的顺序每次都出现，本部分的错误写法大多注入了一段延迟（usleep），并在旁边注明。延迟只是放大了时间窗口，没有延迟时这些错误照样存在，只是偶尔才发生，在 sdriver 中表现为某个 trace 有时通过、有时失败。</p>
 <h3 id="lab-shelllab-s64">6.1　等待前台作业：忙等、sleep 与 sigsuspend<a class="anchor" href="#lab-shelllab-s64">#</a></h3>
 <p>前台作业运行时，eval 要等它结束或停止之后才能返回。第 2.6 节讲了等待的条件（前台已经没有作业，即 fgpid 返回 0）和 pause 写法中的竞争。动手时还会想到另外两种写法：一直检查条件（忙等），或者每次检查之后 sleep 一会儿。三种写法都能通过 trace，差别要用时间来看（表 22）。下面让 shell 前台运行一次 /bin/sleep 2，再依次前台运行 10 次 /bin/true，用 bash 的 time 记下 shell 消耗的 CPU 时间和总耗时：</p>
-<p class="cap"><span style="color:#1F3864"><strong>表 22　三种等待写法的耗时（默认环境实测，sim/s5_race）</strong></span></p>
+<p class="cap"><span style="color:#1F3864"><strong>表 22　三种等待写法的耗时（默认环境实测）</strong></span></p>
 <div class="scroll"><table><thead><tr><th><span style="color:#1F3864"><strong>写法</strong></span></th><th><span style="color:#1F3864"><strong>/bin/sleep 2</strong></span></th><th><span style="color:#1F3864"><strong>10 次 /bin/true</strong></span></th></tr></thead><tbody><tr><td>sigsuspend（参考解答）</td><td>用户态 0.003 秒，总耗时 2.030 秒</td><td>用户态 0.012 秒，总耗时 0.551 秒</td></tr><tr><td>忙等（变体 wait_busy）</td><td>用户态 1.908 秒，总耗时 2.003 秒</td><td>用户态 0.309 秒，总耗时 0.503 秒</td></tr><tr><td>sleep(1) 轮询（变体 wait_sleep）</td><td>用户态 0.002 秒，总耗时 2.003 秒</td><td>用户态 0.010 秒，总耗时 0.459 秒</td></tr><tr><td>sleep(1) 轮询，检查与 sleep 之间注入 50 毫秒延迟（变体 wait_sleep_gap）</td><td>用户态 0.002 秒，总耗时 2.096 秒</td><td>用户态 0.012 秒，总耗时 1.557 秒</td></tr></tbody></table></div>
 <p>忙等的问题一目了然，等 2 秒，shell 自己就用掉了 1.9 秒的 CPU 时间，等待期间它占满一个核。实验说明 §7 明确禁止这种写法。</p>
 <p>sleep 轮询的结果出人意料：总耗时与 sigsuspend 差不多，并没有“每次多等 1 秒”。原因是 sleep 被信号打断时会提前返回：SIGCHLD 到达，处理程序运行完，sleep 就返回了，循环再检查一次条件，发现前台作业已经没有了。问题出在 SIGCHLD 恰好到达于“检查条件”与“开始 sleep”之间的那一刻：处理程序先运行完，sleep 随后开始，没有信号再来打断它，只能睡满 1 秒。正常运行时这个窗口很窄，很少碰到；在两者之间注入 50 毫秒延迟、把窗口放大之后，10 次 /bin/true 就从 0.5 秒变成了 1.6 秒，多出来的时间就是“睡满 1 秒”的那几次。这与第 2.6 节 pause 写法的问题是同一个：检查条件和开始睡眠是两个分开的动作，中间可以插进一个信号。</p>
@@ -17932,9 +17931,9 @@ setpgid error: No such process
 [tsh 退出码 1]</code></pre></figure>
 <p>在参考解答中，fork 之前已经阻塞了 SIGCHLD，子进程在父进程 setpgid 之前不可能被回收，ESRCH 不会出现；如果出现了，说明阻塞写错了，让 shell 报错退出正好能暴露它。</p>
 <h2 id="lab-shelllab-s68">第七部分　完整的 tsh.c 与提交前的打磨<a class="anchor" href="#lab-shelllab-s68">#</a></h2>
-<p>sdriver 得到 100 分只是第一步。实验说明还有一整套人工检查的要求：每个系统调用都检查返回值，每行不超过 80 列，每个函数有注释，eval 拆成若干辅助函数，不靠 sleep 同步（第 0.2 节）。这一部分先给出参考解答剩下的部分和验证结果，再讲这些要求怎样落实，最后是调试方法和全部错误写法的一览表。</p>
+<p>sdriver 得到 100 分只是第一步。实验说明还有一整套人工检查的要求：每个系统调用都检查返回值，每行不超过 80 列，每个函数有注释，eval 拆成若干辅助函数，不靠 sleep 同步（第 0.2 节）。</p>
 <h3 id="lab-shelllab-s69">7.1　参考解答的组成与验证<a class="anchor" href="#lab-shelllab-s69">#</a></h3>
-<p>参考解答在 handout 的 tsh.c 上增加了 382 行：前面几部分讲过的 16 个函数（图 9），8 个包装函数，以及它们的原型。原型放在已给的原型之后，函数定义放在 eval 之后；tsh.c 已给的部分一行未改。sim/sol/ 中的 assemble.py 把 eval.c、wrappers.c、handlers.c 三个文件装进 handout 的 tsh.c，得到完整的参考解答，第三至六部分的每个错误写法都是在它上面改动一处。</p>
+<p>完整参考解答在 handout 的 tsh.c 上增加了 382 行：第三至六部分给出的 16 个函数（图 9）、本节的 8 个包装函数，以及下面的函数原型。原型放在已给的原型之后，函数定义放在 eval 之后；tsh.c 已给的部分一行未改，第三至六部分演示的每个错误写法都是在完整参考解答上改动一处后在默认环境实测的。</p>
 <figure class="code"><div class="code-title"><span style="color:#7F7F7F"><strong>tsh.c 中自写函数的原型（参考解答）</strong></span></div><pre><code>static pid_t Fork(void);
 static void Kill(pid_t pid, int sig);
 static void Setpgid(pid_t pid, pid_t pgid);
@@ -17957,7 +17956,7 @@ static void builtin_bgfg(struct cmdline_tokens *tok);
 static void builtin_kill(struct cmdline_tokens *tok);
 static void forward_to_fg(int sig);</code></pre></figure>
 <p>所有自写函数都加了 static，只在 tsh.c 内部可见。实验要求补全的 eval 和三个处理程序不能加 static，它们的原型已经由 tsh.c 给出。</p>
-<p>在默认环境上，参考解答的检查结果如下（sim/s1_ref）：</p>
+<p>在默认环境上，参考解答的检查结果如下：</p>
 <figure class="code"><pre><code>超过 80 列的行数：0，含制表符的行数：2
 Score: 100/100                         # ./sdriver，每个 trace 4 遍
 gcc -Wall -Werror -fsyntax-only tsh.c：退出码 0
@@ -17966,7 +17965,7 @@ Score: 100/100                         # ./sdriver -i 10，每个 trace 10 遍</
 <h3 id="lab-shelllab-s70">7.2　每个系统调用都检查返回值<a class="anchor" href="#lab-shelllab-s70">#</a></h3>
 <p>实验说明要求检查每个系统调用的返回值。C 的系统调用不会抛出异常，出错时只返回一个特殊值（通常是 −1）并设置 errno，不检查就等于假设它永远成功。第 4.1 节 execve 失败后 shell 一分为二，第 6.4 节 kill 找不到进程组，都是“假设成功”会出事的例子。</p>
 <div class="box qa"><p class="box-title"><span style="color:#7030A0"><strong>常见问题：为什么 C 不替我们检查返回值？</strong></span></p><p>因为出错的消息从内核出来时就只是一个数，一路上没有任何一层替你处理它。下面的程序让同一次失败的 kill（进程 999999 不存在）在三个层次上各走一遍：直接执行 syscall 指令时，内核把 −ESRCH 放在 %rax 中返回；经过 glibc 的 kill 函数，这个负数被换成返回值 −1，原因放进全局变量 errno；如果调用者不看返回值，程序就若无其事地往下走。</p><p>C 诞生时没有异常机制，库函数也无从知道调用者希望失败时怎么办：同样是 kill 失败，内置命令 kill 应当打印“No such process”后继续运行，而包装函数 Kill 的做法是退出（表 23 中列出了几种不同的处理）。所以 C 把决定权连同检查的责任一起留给了调用者。有异常的语言把这一步变成了默认动作，例如 Python 中同样的调用会抛出 ProcessLookupError，不处理就终止程序，失败不会被悄悄忽略。csapp.c 的包装函数相当于在 C 中补上一个“失败就退出”的默认策略。</p></div>
-<figure class="code"><div class="code-title"><span style="color:#7F7F7F"><strong>rawkill.c（sim/e15_errno）</strong></span></div><pre><code>/* rawkill.c：同一次失败的 kill，在三个层次上看到的结果 */
+<figure class="code"><div class="code-title"><span style="color:#7F7F7F"><strong>rawkill.c</strong></span></div><pre><code>/* rawkill.c：同一次失败的 kill，在三个层次上看到的结果 */
 #include &lt;errno.h&gt;
 #include &lt;signal.h&gt;
 #include &lt;stdio.h&gt;
@@ -18018,8 +18017,8 @@ Kill(pid_t pid, int sig)
     if (kill(pid, sig) &lt; 0)
         unix_error("kill error");
 }</code></pre></figure>
-<p>包装函数写好之后，要把原来直接调用的地方全部换掉，否则包装函数只是摆设。替换完可以用一个简单的脚本检查：列出自写函数中仍然直接调用的系统调用（sim/rawcalls.py），逐个确认是有意为之。参考解答剩下的是 表 23 中这些。</p>
-<p class="cap"><span style="color:#1F3864"><strong>表 23　参考解答中没有经过包装函数的系统调用（sim/s1_ref）</strong></span></p>
+<p>包装函数写好之后，要把原来直接调用的地方全部换掉，否则包装函数只是摆设。替换完可以逐个核对自写函数中仍然直接调用的系统调用，确认每一处都是有意为之。参考解答剩下的是 表 23 中这些。</p>
+<p class="cap"><span style="color:#1F3864"><strong>表 23　参考解答中没有经过包装函数的系统调用</strong></span></p>
 <div class="scroll"><table><thead><tr><th><span style="color:#1F3864"><strong>所在函数</strong></span></th><th><span style="color:#1F3864"><strong>直接调用</strong></span></th><th><span style="color:#1F3864"><strong>原因</strong></span></th></tr></thead><tbody><tr><td>open_redirects</td><td>open（两处）</td><td>失败时打印 tshref 的提示语，shell 继续运行（第 4.2 节）</td></tr><tr><td>run_child</td><td>execve</td><td>返回就是失败，紧接着打印“Command not found”并 exit（第 4.1 节）</td></tr><tr><td>run_job</td><td>setpgid</td><td>要容忍 EACCES（第 6.4 节）</td></tr><tr><td>sigchld_handler</td><td>sigfillset、sigprocmask（两处）、waitpid</td><td>处理程序中不能用 unix_error，改用 sio_error；waitpid 返回 −1 且 errno 为 ECHILD 是正常结束（第 5.3、5.4 节）</td></tr><tr><td>forward_to_fg</td><td>sigfillset、sigprocmask（两处）、kill</td><td>处理程序中不能用 unix_error，改用 sio_error（第 5.4 节）</td></tr><tr><td>wait_fg</td><td>sigsuspend</td><td>唯一不检查返回值的调用，见下文</td></tr></tbody></table></div>
 <p>它们都是“失败就退出”不合适的地方，各有各的处理。处理程序中不能调用 unix_error，是因为它用的 fprintf 和 exit 都不是异步信号安全的。sigsuspend 是唯一不检查的：它总是返回 −1、errno 为 EINTR，表示“被信号打断了”，这正是调用它的目的，没有别的结果可以检查。</p>
 <p>检查返回值是否“值得”，可以这样想：一个失败如果会让 shell 进入错误状态而不自知，就必须检查；检查之后怎样处理，取决于这个失败对 shell 意味着什么。sigprocmask、dup2 失败说明程序本身有错误，退出最合适；kill、setpgid、open 失败可能是正常情形，要按具体情况处理。</p>
@@ -18047,13 +18046,13 @@ tsh.c:588:5: error: expected declaration or statement at end of input
 tsh.c:588:9: error: unused variable 'is_bg' [-Werror=unused-variable]
 tsh.c:587:11: error: unused variable 'endbuf' [-Werror=unused-variable]
 ...</code></pre></figure>
-<p>遇到这种报错，先确认文件已经保存完整（看一眼文件末尾，或者 <code>wc -l tsh.c</code>），再运行一次 make。文件完整之后，同样的命令正常编译，trace01 通过（sim/s7_extra）。</p>
+<p>遇到这种报错，先确认文件已经保存完整（看一眼文件末尾，或者 <code>wc -l tsh.c</code>），再运行一次 make。文件完整之后，同样的命令正常编译，trace01 通过。</p>
 <h3 id="lab-shelllab-s73">7.5　错误写法一览<a class="anchor" href="#lab-shelllab-s73">#</a></h3>
 <p>表 24 汇总了第三至六部分出现的全部错误写法。左边是能看到的现象，查错时从现象出发，找到对应的小节。</p>
-<p class="cap"><span style="color:#1F3864"><strong>表 24　错误写法一览（都在默认环境上实测，sim/variants.py 与 sim/s1_ref–s5_race）</strong></span></p>
+<p class="cap"><span style="color:#1F3864"><strong>表 24　错误写法一览（均在默认环境上实测）</strong></span></p>
 <div class="scroll"><table><thead><tr><th><span style="color:#1F3864"><strong>现象</strong></span></th><th><span style="color:#1F3864"><strong>原因</strong></span></th><th><span style="color:#1F3864"><strong>改法</strong></span></th><th><span style="color:#1F3864"><strong>小节</strong></span></th></tr></thead><tbody><tr><td>编译报 return-local-addr</td><td>解析函数返回局部数组的地址</td><td>输出参数、返回结构体，或不单独写函数</td><td>3.3</td></tr><tr><td>编译报 unknown conversion type character</td><td>把用户输入的 %1 写进了格式串</td><td>写 %%，或用 %s 输出原始参数</td><td>3.3</td></tr><tr><td>clang 或 -pedantic 下报 label followed by a declaration</td><td>case 标号后直接写声明</td><td>用花括号把这个 case 括起来</td><td>3.1</td></tr><tr><td>链接报 undefined reference to Kill</td><td>调用了 csapp.c 中的包装函数</td><td>在 tsh.c 中自己写包装函数</td><td>3.4</td></tr><tr><td>trace07 中 jobs 没有输出</td><td>listjobs 只写在“有重定向”的分支里</td><td>没有重定向时输出到 STDOUT_FILENO</td><td>3.2</td></tr><tr><td>trace28 超时</td><td>kill 发了 SIGKILL</td><td>发 SIGTERM</td><td>3.4</td></tr><tr><td>trace15、16、29 少一行</td><td>bg 之后没有打印“[jid] (pid) 命令行”</td><td>补上这一行</td><td>3.5</td></tr><tr><td>命令执行两遍，有两个 shell</td><td>execve 失败后 return</td><td>打印提示语后 exit</td><td>4.1</td></tr><tr><td>不带重定向的程序读标准输入时 Bad file descriptor</td><td>子进程无条件关闭了 0 号描述符</td><td>只在有重定向时 dup2、close</td><td>4.2</td></tr><tr><td>前台作业读终端时 Input/output error，而不是被停止</td><td>子进程没有把 SIGTTIN、SIGTTOU 恢复为默认</td><td>execve 之前 Signal(…, SIG_DFL)</td><td>4.4</td></tr><tr><td>trace25 多出“nohup: Command not found”</td><td>把含 "nohup" 的 argv 交给 execve</td><td>从 argv[1] 开始</td><td>4.5</td></tr><tr><td>作业在外部被 SIGCONT 继续后，jobs 仍显示 Stopped，或者作业从列表中消失</td><td>没有加 WCONTINUED，或者加了却没有单独处理 WIFCONTINUED</td><td>加 WCONTINUED，ST 改为 BG</td><td>5.2</td></tr><tr><td>已结束的后台作业一直显示为 Running，ps 看到僵死进程</td><td>处理程序只调用一次 waitpid</td><td>while 循环到返回 0 或 −1</td><td>5.3</td></tr><tr><td>编译报 incompatible-pointer-types，参数类型是 sigset_t **</td><td>对已经是指针的 prev 又取了一次地址</td><td>直接传 prev</td><td>5.4</td></tr><tr><td>第一个子进程结束时 shell 打印“sigprocmask error”后退出</td><td>sigfillset 的返回值判断写反，把成功的 0 当成失败</td><td>判断 <code>&lt; 0</code></td><td>5.4</td></tr><tr><td>ctrl-c 后 shell 卡住，CPU 占满</td><td>转发信号的处理程序用 while 判断前台作业</td><td>用 if</td><td>5.5</td></tr><tr><td>等待前台作业时 shell 占满 CPU</td><td>忙等</td><td>sigsuspend</td><td>6.1</td></tr><tr><td>偶尔多等 1 秒</td><td>sleep 轮询，信号落在检查与 sleep 之间</td><td>sigsuspend</td><td>6.1</td></tr><tr><td>作业已结束仍在列表中；前台作业时 shell 永远等待</td><td>fork 之后才阻塞 SIGCHLD</td><td>fork 之前阻塞，addjob 之后恢复</td><td>6.2</td></tr><tr><td>kill 一个刚好结束的作业，shell 自己被 SIGTERM 终止</td><td>查找作业在阻塞区之外</td><td>查找与使用放进同一个阻塞区</td><td>6.3</td></tr><tr><td>刚启动作业就按 ctrl-c，shell 报 kill error 退出</td><td>只有子进程 setpgid，或父进程写成 setpgid(0, 0)</td><td>父进程也 setpgid(pid, pid)</td><td>6.4、4.3</td></tr><tr><td>shell 报 setpgid error: Permission denied 退出</td><td>父进程的 setpgid 用了“失败就退出”</td><td>容忍 EACCES</td><td>6.4</td></tr><tr><td>改了代码，make 什么也不做，sdriver 全部失败</td><td>tsh 是在另一种架构上编译的</td><td>file tsh 检查，touch tsh.c 后重新编译</td><td>7.4</td></tr><tr><td>编译报 expected declaration or statement at end of input，以及一串 unused variable</td><td>文件还没有保存或同步完整</td><td>确认文件完整后再 make</td><td>7.4</td></tr></tbody></table></div>
 <h2 id="lab-shelllab-s74">第八部分　测验题型与单选例题<a class="anchor" href="#lab-shelllab-s74">#</a></h2>
-<p>学期末的 Lab 测验是纸笔考试，全部是单选题，每个实验 5 题、每题 2 分。2025 年 Shell Lab 的 5 道题分别考了：tsh 与真实 shell 的功能差别（不支持管道和搜索路径、支持重定向与后台作业），信号阻塞与解除阻塞的时机，内置命令的细节（jobs 要阻塞信号、kill 发什么信号、nohup 怎样处理 SIGHUP），sigchld_handler 中 WIFSTOPPED 与 WIFCONTINUED 的填空，以及等待前台作业的正确写法。这五个方面正好对应本讲义的第四至六部分，下面的例题按同样的方向编写，答案均匀分布在 A–D，每个选项都给出分析。题中涉及的行为都在默认环境上实测过（sim/s1_ref–s6_quiz）。</p>
+<p>学期末的 Lab 测验是纸笔考试，全部是单选题，每个实验 5 题、每题 2 分。2025 年 Shell Lab 的 5 道题分别考了：tsh 与真实 shell 的功能差别（不支持管道和搜索路径、支持重定向与后台作业），信号阻塞与解除阻塞的时机，内置命令的细节（jobs 要阻塞信号、kill 发什么信号、nohup 怎样处理 SIGHUP），sigchld_handler 中 WIFSTOPPED 与 WIFCONTINUED 的填空，以及等待前台作业的正确写法。题中涉及的行为均在默认环境上实测验证。</p>
 <div class="box question"><p class="q-title"><span class="q-num"><span style="color:#1F3864">例 1</span><span style="color:#1F3864"></span></span>（单选）关于 tsh 与真实 shell 的区别，说法正确的是：</p><p>A. tsh 支持管道，例如 /bin/ls | /bin/grep tsh</p><p>B. tsh 运行程序时会在 PATH 中查找，输入 cat 也能运行 /bin/cat</p><p>C. tsh 不把终端交给前台作业，前台作业读终端时会收到 SIGTTIN 而被停止</p><p>D. tsh 不需要捕获 SIGINT，ctrl-c 由内核直接发给前台作业</p></div>
 <details class="box answer" open><summary>答案</summary><p>C</p></details>
 <p>tsh 从不调用 tcsetpgrp，终端的前台进程组始终是 tsh 自己所在的组，作业（包括“前台作业”）对终端来说都是后台进程，读终端时收到 SIGTTIN，按默认动作停止，tsh 报告“stopped by signal 21”（第 4.4 节的伪终端实验，tshref 相同）。选项 A 错，parseline 不认识 |，tsh 不支持管道。选项 B 错，execve 不搜索 PATH，输入 cat 时 tsh 打印“cat: Command not found”，要写 /bin/cat。选项 D 错，ctrl-c 产生的 SIGINT 发给终端的前台进程组，也就是 tsh 所在的组，作业在自己的组中收不到，必须由 tsh 捕获后用 kill(-pid, SIGINT) 转发（第 5.1 节）。</p>
